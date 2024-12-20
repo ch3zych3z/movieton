@@ -58,6 +58,11 @@ let private parseTags config =
         Tokenizer.tokenizeTag
         Parser.parseTag
 
+let private isAcceptedMovieTag config str =
+    match Primitives.parseFloat str with
+    | Success relevance when relevance > config.relevanceLevel -> true
+    | _ -> false
+
 let private parseMovieTags config = task {
     let! linksTask =
         Pipeline.runTask
@@ -70,7 +75,7 @@ let private parseMovieTags config = task {
             let links = links |> Seq.map KeyValuePair |> Dictionary
             return Pipeline.runTask
                 config.tagScoresPath
-                Tokenizer.tokenizeMovieTag
+                (Tokenizer.tokenizeMovieTag (isAcceptedMovieTag config))
                 (Parser.parseMovieTags links)
         }
     return!
@@ -109,7 +114,7 @@ let run config =
                         staffMembers = staffMembers
                         participation = participation
                         tags = tags
-                        movieTags = movieTags |> Seq.choose id
+                        movieTags = movieTags
                     }
                 }
             }

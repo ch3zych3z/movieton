@@ -11,7 +11,6 @@ open MovieTon.Parser.Primitives
 open MovieTon.Core.Tag
 
 let private parseCode (prefix: string) (str: string) = parser {
-    do! str |> assume _.StartsWith(prefix)
     let codePart = str.Substring(2)
     return! parseInt codePart
 }
@@ -62,11 +61,8 @@ let parseTag (token: TokenizedTag) = parser {
 let parseMovieTags (links: Dictionary<int, int>) (token: TokenizedMovieTag) = parser {
     let! movieLensId = parseInt token.movieId
     let! tagId = parseInt token.tagId
-    let! relevance = parseFloat token.relevance
 
     let movieId = links[movieLensId]
 
-    if relevance > 0.5 then
-        return MovieTag.Of tagId movieId |> Some
-    else return None
+    return MovieTag.Of tagId movieId
 }
