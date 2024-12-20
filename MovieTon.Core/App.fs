@@ -45,8 +45,11 @@ type MovieTonApp(
         let movie = movieRepository.getMovie id
         match movie with
         | Some movie ->
-            let title = movieRepository.getTitles id |> titleViewStrategy
-            movieView title movie
+            match movieRepository.getTitles id with
+            | Some title ->
+                let title = title |> titleViewStrategy
+                movieView title movie
+            | None -> None
         | None -> None
 
     member x.GetMovieInfo(title: string) = movieViewByTitle title
