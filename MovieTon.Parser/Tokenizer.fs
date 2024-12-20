@@ -9,6 +9,29 @@ let private tokenize filePath tokenizer =
     |> Seq.skip 1 // skip header
     |> Seq.iter tokenizer
 
+let private indicesOfSep (sep: char) (str: string) =
+    let spanInds = List()
+    let mutable ind = 0
+    spanInds.Add(-1)
+    for c in str do
+        if c = sep then
+            spanInds.Add(ind)
+        ind <- ind + 1
+    spanInds.Add(str.Length)
+    spanInds
+
+let inline private spanStart (spanInds: List<int>) ind =
+    spanInds[ind] + 1
+
+let inline private spanLength (spanInds: List<int>) ind =
+    spanInds[ind + 1] - spanInds[ind] - 1
+
+let inline private span (str: string) spans ind =
+    str.AsSpan(spanStart spans ind, spanLength spans ind)
+
+let inline private substr (str: string) spans ind =
+    str.Substring(spanStart spans ind, spanLength spans ind)
+
 let private cacheMovieByLanguage
     (codes: List<string>)
     (locals: List<string>)
@@ -16,14 +39,20 @@ let private cacheMovieByLanguage
     isAccepted
     (str: string)
     =
-        let [| code; _; title; region; language; _; _; _ |] = str.Split('\t')
+        let spans = indicesOfSep '\t' str
         let local =
+            let region = substr str spans 3
             if isAccepted region then
                 Some region
-            elif isAccepted language then
-                Some language
-            else None
+            else
+                let language = substr str spans 4
+                if isAccepted language then
+                    Some language
+                else
+                    None
         if local.IsSome then
+            let title = substr str spans 2
+            let code = substr str spans 0
             codes.Add(code)
             titles.Add(title)
             locals.Add(local.Value)
@@ -33,8 +62,9 @@ let tokenizeMovieCodes filePath =
     let locals = List()
     let titles = List()
 
+    let acceptedLocals = ["ru"; "en"; "us"; "gb"]
     let isAccepted str =
-        ["ru"; "en"; "us"; "gb"] |> List.exists _.Equals(str, StringComparison.InvariantCultureIgnoreCase)
+        acceptedLocals |> List.exists _.Equals(str, StringComparison.InvariantCultureIgnoreCase)
     cacheMovieByLanguage codes locals titles isAccepted
     |> tokenize filePath
 
@@ -45,7 +75,9 @@ let private cacheActorsDirectors
     (names: List<string>)
     (str: string)
     =
-        let [| code; name; _; _; _; _ |] = str.Split('\t')
+        let spans = indicesOfSep '\t' str
+        let code = substr str spans 0
+        let name = substr str spans 1
         codes.Add(code)
         names.Add(name)
 
@@ -65,8 +97,11 @@ let private cacheStaffMoviesNRoles
     isAccepted
     (str: string)
     =
-        let [| movieCode; _; staffCode; role; _; _|] = str.Split('\t')
+        let spans = indicesOfSep '\t' str
+        let role = substr str spans 3
         if isAccepted role then
+            let movieCode = substr str spans 0
+            let staffCode = substr str spans 2
             movies.Add(movieCode)
             staff.Add(staffCode)
             roles.Add(role)
@@ -76,8 +111,9 @@ let tokenizeActorsDirectorsCodes filePath =
     let staffCodes = List()
     let roles = List()
 
+    let acceptedRoles = ["actor"; "actress"; "director"]
     let isAccepted str =
-        ["actor"; "actress"; "director"] |> List.exists _.Equals(str, StringComparison.InvariantCultureIgnoreCase)
+        acceptedRoles |> List.exists _.Equals(str, StringComparison.InvariantCultureIgnoreCase)
     cacheStaffMoviesNRoles movieCodes staffCodes roles isAccepted
     |> tokenize filePath
 
@@ -88,7 +124,9 @@ let private cacheMovieRatings
     (ratings: List<string>)
     (str: string)
     =
-    let [| movieCode; rating; _ |] = str.Split('\t')
+    let spans = indicesOfSep '\t' str
+    let movieCode = substr str spans 0
+    let rating = substr str spans 1
     movies.Add(movieCode)
     ratings.Add(rating)
 
@@ -106,7 +144,9 @@ let private cacheLinks
     (imdbIds: List<string>)
     (str: string)
     =
-    let [| mlCode; imdbId; _ |] = str.Split(',')
+    let spans = indicesOfSep ',' str
+    let mlCode = substr str spans 0
+    let imdbId = substr str spans 1
     mlCodes.Add(mlCode)
     imdbIds.Add(imdbId)
 
@@ -140,20 +180,22 @@ let tokenizeTagCodes filePath =
 let private cacheRelevance
     (mlCodes: List<string>)
     (tagIds: List<string>)
-    (relevances: List<string>)
+    isAccepted
     (str: string)
     =
-    let [| mlCode; tagId; relevance |] = str.Split(',')
-    mlCodes.Add(mlCode)
-    tagIds.Add(tagId)
-    relevances.Add(relevance)
+    let spans = indicesOfSep ',' str
+    let relevance = substr str spans 2
+    if isAccepted relevance then
+        let mlCode = substr str spans 0
+        let tagId = substr str spans 1
+        mlCodes.Add(mlCode)
+        tagIds.Add(tagId)
 
-let tokenizeTagScores filePath =
+let tokenizeTagScores filePath isAccepted =
     let mlCodes = List()
     let tagIds = List()
-    let relevances = List()
 
-    cacheRelevance mlCodes tagIds relevances
+    cacheRelevance mlCodes tagIds isAccepted
     |> tokenize filePath
 
-    mlCodes, tagIds, relevances
+    mlCodes, tagIds

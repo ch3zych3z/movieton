@@ -84,19 +84,22 @@ let private parseTags config = parser {
 }
 
 let private parseMovieTags config = parser {
-    let movieLensIds, tagIds, relevances = Tokenizer.tokenizeTagScores config.tagScoresPath
+    let isAccepted relevance =
+        let res =
+            parser {
+                let! relevance = parseFloat relevance
+                return relevance > config.relevanceLevel
+            }
+        match res with
+        | Success true -> true
+        | _ -> false
+
+    let movieLensIds, tagIds = Tokenizer.tokenizeTagScores config.tagScoresPath isAccepted
     let! movieLensIds = parseList parseInt movieLensIds
     let! tagIds = parseList parseInt tagIds
-    let! relevances = parseList parseFloat relevances
 
     let! movieLensId2imdb = parseLinks config
     let movieIds = Seq.map (fun mlId -> movieLensId2imdb[mlId]) movieLensIds
-
-    let tagIds, movieIds, _ =
-        Seq.zip3 tagIds movieIds relevances
-        |> List.ofSeq
-        |> List.filter (fun (_, _, relevance) -> relevance > config.relevanceLevel)
-        |> List.unzip3
 
     return Seq.map2 MovieTag.Of tagIds movieIds
 }
