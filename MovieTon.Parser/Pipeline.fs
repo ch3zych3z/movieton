@@ -6,7 +6,7 @@ open System.Threading.Tasks
 
 open MovieTon.Parser.Core
 
-let makeTask filepath tokenize parse =
+let runTask filepath tokenize parse =
     let lines = new BlockingCollection<string>()
     let tokens = new BlockingCollection<_>()
 
@@ -43,6 +43,6 @@ let makeTask filepath tokenize parse =
     }
 
 let run filepath tokenize parse =
-    let task = makeTask filepath tokenize parse
+    let task = runTask filepath tokenize parse
     task.Wait()
     task.Result

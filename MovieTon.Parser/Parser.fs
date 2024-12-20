@@ -70,24 +70,3 @@ let parseMovieTags (links: Dictionary<int, int>) (token: TokenizedMovieTag) = pa
         return MovieTag.Of tagId movieId |> Some
     else return None
 }
-
-// let parseEntities config =
-//     try
-//         parser {
-//             let! titles = parseTitle config
-//             let! staffMembers = parseStaffMembers config
-//             let! participation = parseParticipation config
-//             let! movies = parseMovies config
-//             let! tags = parseTags config
-//             let! movieTags = parseMovieTags config
-//             return {
-//                 titles = titles
-//                 staffMembers = staffMembers
-//                 participation = participation
-//                 movies = movies
-//                 tags = tags
-//                 movieTags = movieTags
-//             }
-//         }
-//     with
-//         :? FileNotFoundException as exn -> ParsingError exn.Message
