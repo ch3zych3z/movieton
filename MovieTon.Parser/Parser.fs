@@ -1,6 +1,7 @@
 module MovieTon.Parser.Parser
 
 open System.IO
+open System.Threading.Tasks
 open MovieTon.Utils.Collections
 open MovieTon.Core.Staff
 open MovieTon.Core.Movie
@@ -103,13 +104,22 @@ let private parseMovieTags config = parser {
 
 let parseEntities config =
     try
+        let titles = Task.Run(fun () -> parseTitles config)
+        let staffMembers = Task.Run(fun () -> parseStaffMembers config)
+        let participation = Task.Run(fun () -> parseParticipation config)
+        let movies = Task.Run(fun () -> parseMovies config)
+        let tags = Task.Run(fun () -> parseTags config)
+        let movieTags = Task.Run(fun () -> parseMovieTags config)
+
+        [| titles :> Task; staffMembers; participation; movies; tags; movieTags |] |> Task.WaitAll
         parser {
-            let! titles = parseTitles config
-            let! staffMembers = parseStaffMembers config
-            let! participation = parseParticipation config
-            let! movies = parseMovies config
-            let! tags = parseTags config
-            let! movieTags = parseMovieTags config
+            let! titles = titles.Result
+            let! staffMembers = staffMembers.Result
+            let! participation = participation.Result
+            let! movies = movies.Result
+            let! tags = tags.Result
+            let! movieTags = movieTags.Result
+
             return {
                 titles = titles
                 staffMembers = staffMembers
