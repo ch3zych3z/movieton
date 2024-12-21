@@ -23,7 +23,7 @@ let rec private step (interpreter: Interpreter) lastCode =
     if lastCode = 0 then
         let strCmd = readCmd ()
         if strCmd <> null then
-            match readCmd () |> Parser.Command.parse with
+            match strCmd |> Parser.Command.parse with
             | Ok cmd ->
                 let code = interpreter.Interpret cmd
                 step interpreter code
