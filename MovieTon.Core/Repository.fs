@@ -7,7 +7,7 @@ open MovieTon.Core.Tag
 type MovieRepository = {
     getMovie: int -> Movie option
     getMovieByTitle: string -> Movie option
-    getTitles: int -> Title seq
+    getTitles: int -> Title seq option
 
     putMovies: Movie seq -> unit
     putTitles: Title seq -> unit

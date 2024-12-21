@@ -1,8 +1,8 @@
 module MovieTon.CLIRunner.Parser
 
 open MovieTon.CLIRunner.Interpreter
-open MovieTon.Parser
-open MovieTon.Parser.Parser
+open MovieTon
+open MovieTon.Parser.API
 open MovieTon.Parser.Core
 
 module Command =
@@ -18,7 +18,7 @@ module Command =
 
     let parsingCommand config =
         {
-            parse = fun () -> Parser.parseEntities config :> obj
+            parse = fun () -> Parser.API.run config :> obj
             doAfter = fun res ->
                 match res with
                 | :? ParsingResult<ParsedEntities> as res ->

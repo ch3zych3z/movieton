@@ -47,7 +47,8 @@ module private MovieRepository =
         | None -> None
 
     let private getTitles repo id =
-        repo.titlesById[id] :> Title seq
+        Dictionary.get id repo.titlesById
+        |> Option.map Seq.cast<Title>
 
     let private putMovies repo (movies: Movie seq) =
         for movie in movies do

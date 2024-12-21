@@ -1,6 +1,8 @@
-module MovieTon.Parser.Parser
+module internal MovieTon.Parser.Parser
 
+open System.Collections.Generic
 open System.IO
+open MovieTon.Parser.Tokenizer
 open MovieTon.Utils.Collections
 open MovieTon.Core.Staff
 open MovieTon.Core.Movie
@@ -9,7 +11,6 @@ open MovieTon.Parser.Primitives
 open MovieTon.Core.Tag
 
 let private parseCode (prefix: string) (str: string) = parser {
-    do! str |> assume _.StartsWith(prefix)
     let codePart = str.Substring(2)
     return! parseInt codePart
 }
@@ -22,102 +23,46 @@ let private parseRating (str: string) = parser {
     return d1p * 10 + d2p
 }
 
-type Config = {
-    movieCodesPath: string
-    actorsDirectorsNamesPath: string
-    actorsDirectorsCodesPath: string
-    ratingsPath: string
-    linksPath: string
-    tagCodesPath: string
-    tagScoresPath: string
-    relevanceLevel: float
+let parseTitle (token: TokenizedTitle) = parser {
+    let! parsedCode = parseCode "tt" token.movieId
+    let local = Localization.UnsafeParse token.local
+    return Title.Of token.title local parsedCode
 }
 
-type ParsedEntities = {
-    titles: Title seq
-    movies: Movie seq
-    staffMembers: StaffMember seq
-    participation: Participation seq
-    tags: Tag seq
-    movieTags: MovieTag seq
+let parseStaffMember (token: TokenizedStaffMember) = parser {
+    let! parsedCode = parseCode "nm" token.id
+    return StaffMember.Of parsedCode token.name
 }
 
-let private parseTitles config = parser {
-    let codes, locals, titles = Tokenizer.tokenizeMovieCodes config.movieCodesPath
-    let! parsedCodes = parseList (parseCode "tt") codes
-    let locals = Seq.map Localization.UnsafeParse locals
-    return Seq.map3 Title.Of titles locals parsedCodes
+let parseParticipation (token: TokenizedParticipation) = parser {
+    let! staffCode = parseCode "nm" token.staffId
+    let! movieCode = parseCode "tt" token.movieId
+    let roles = Role.Parse token.role
+    return Participation.Of staffCode movieCode roles
 }
 
-let private parseStaffMembers config = parser {
-    let codes, names = Tokenizer.tokenizeActorsDirectorsNames config.actorsDirectorsNamesPath
-    let! parsedCodes = parseList (parseCode "nm") codes
-    return Seq.map2 StaffMember.Of parsedCodes names
+let parseMovie (token: TokenizedMovie) = parser {
+    let! movieCode = parseCode "tt" token.id
+    let! rating = parseRating token.rating
+    return Movie.Of movieCode rating
 }
 
-let private parseParticipation config = parser {
-    let movieCodes, staffCodes, roles = Tokenizer.tokenizeActorsDirectorsCodes config.actorsDirectorsCodesPath
-    let! staffCodes = parseList (parseCode "nm") staffCodes
-    let! movieCodes = parseList (parseCode "tt") movieCodes
-    let roles = Seq.map Role.Parse roles
-    return Seq.map3 Participation.Of staffCodes movieCodes roles
+let parseLink (token: TokenizedLink) = parser {
+    let! id = parseInt token.movieLensId
+    let! imdbId = parseInt token.imdbId
+    return id, imdbId
 }
 
-let private parseMovies config = parser {
-    let codes, ratings = Tokenizer.tokenizeRatings config.ratingsPath
-    let! movieCodes = parseList (parseCode "tt") codes
-    let! ratings = parseList parseRating ratings
-    return Seq.map2 Movie.Of movieCodes ratings
+let parseTag (token: TokenizedTag) = parser {
+    let! tagId = parseInt token.id
+    return Tag.Of tagId token.name
 }
 
-let private parseLinks config = parser {
-    let ids, imdbIds = Tokenizer.tokenizeLinks config.linksPath
-    let! ids = parseList parseInt ids
-    let! imdbIds = parseList parseInt imdbIds
-    return Dictionary.init2 ids imdbIds
+let parseMovieTags (links: Dictionary<int, int>) (token: TokenizedMovieTag) = parser {
+    let! movieLensId = parseInt token.movieId
+    let! tagId = parseInt token.tagId
+
+    let movieId = links[movieLensId]
+
+    return MovieTag.Of tagId movieId
 }
-
-let private parseTags config = parser {
-    let tagIds, tags = Tokenizer.tokenizeTagCodes config.tagCodesPath
-    let! tagIds = parseList parseInt tagIds
-    return Seq.map2 Tag.Of tagIds tags
-}
-
-let private parseMovieTags config = parser {
-    let movieLensIds, tagIds, relevances = Tokenizer.tokenizeTagScores config.tagScoresPath
-    let! movieLensIds = parseList parseInt movieLensIds
-    let! tagIds = parseList parseInt tagIds
-    let! relevances = parseList parseFloat relevances
-
-    let! movieLensId2imdb = parseLinks config
-    let movieIds = Seq.map (fun mlId -> movieLensId2imdb[mlId]) movieLensIds
-
-    let tagIds, movieIds, _ =
-        Seq.zip3 tagIds movieIds relevances
-        |> List.ofSeq
-        |> List.filter (fun (_, _, relevance) -> relevance > config.relevanceLevel)
-        |> List.unzip3
-
-    return Seq.map2 MovieTag.Of tagIds movieIds
-}
-
-let parseEntities config =
-    try
-        parser {
-            let! titles = parseTitles config
-            let! staffMembers = parseStaffMembers config
-            let! participation = parseParticipation config
-            let! movies = parseMovies config
-            let! tags = parseTags config
-            let! movieTags = parseMovieTags config
-            return {
-                titles = titles
-                staffMembers = staffMembers
-                participation = participation
-                movies = movies
-                tags = tags
-                movieTags = movieTags
-            }
-        }
-    with
-        :? FileNotFoundException as exn -> ParsingError exn.Message

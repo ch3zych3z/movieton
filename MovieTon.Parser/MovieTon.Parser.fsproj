@@ -10,6 +10,8 @@
       <Compile Include="Primitives.fs" />
       <Compile Include="Tokenizer.fs" />
       <Compile Include="Parser.fs" />
+      <Compile Include="Pipeline.fs" />
+      <Compile Include="API.fs" />
     </ItemGroup>
 
     <ItemGroup>
