@@ -10,6 +10,10 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MovieTon.Utils", "MovieTon.
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MovieTon.CLIRunner", "MovieTon.CLIRunner\MovieTon.CLIRunner.fsproj", "{69406423-CA2C-4DEC-B3A6-503D23B272CC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieTon.Database", "MovieTon.Database\MovieTon.Database.csproj", "{9B70550B-1B4C-42A3-9169-71F5D54FD54B}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MovieTon.DatabaseApi", "MovieTon.DatabaseApi\MovieTon.DatabaseApi.fsproj", "{3ED3DC00-096F-4F58-A562-C712C1DA58F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +40,13 @@ Global
 		{69406423-CA2C-4DEC-B3A6-503D23B272CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{69406423-CA2C-4DEC-B3A6-503D23B272CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{69406423-CA2C-4DEC-B3A6-503D23B272CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B70550B-1B4C-42A3-9169-71F5D54FD54B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B70550B-1B4C-42A3-9169-71F5D54FD54B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B70550B-1B4C-42A3-9169-71F5D54FD54B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B70550B-1B4C-42A3-9169-71F5D54FD54B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3ED3DC00-096F-4F58-A562-C712C1DA58F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3ED3DC00-096F-4F58-A562-C712C1DA58F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3ED3DC00-096F-4F58-A562-C712C1DA58F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3ED3DC00-096F-4F58-A562-C712C1DA58F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -3,28 +3,18 @@ module MovieTon.Core.Repository
 open MovieTon.Core.Movie
 open MovieTon.Core.Staff
 open MovieTon.Core.Tag
+open MovieTon.Core.Info
 
-type MovieRepository = {
-    getMovie: int -> Movie option
-    getMovieByTitle: string -> Movie option
-    getTitles: int -> Title seq option
-
+type Repository = {
+    getMovieByTitle: string -> MovieInfo option
     putMovies: Movie seq -> unit
     putTitles: Title seq -> unit
-}
 
-type StaffRepository = {
-    getParticipationByName: string -> Participation seq option
-    getDirectorActors: int -> StaffMember option * StaffMember seq option
-
+    getStaffMovies: string -> (Title seq -> string) -> MovieInfo seq option
     putStaffMembers: StaffMember seq -> unit
     putParticipation: Participation seq -> unit
-}
 
-type TagRepository = {
-    getMoviesWithTagName: string -> MovieTag seq option
-    getTagsByMovie: int -> Tag seq option
-
+    getTagMovies: string -> (Title seq -> string) -> MovieInfo seq option
     putTags: Tag seq -> unit
     putMovieTags: MovieTag seq -> unit
 }

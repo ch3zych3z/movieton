@@ -29,6 +29,12 @@ with
     static member Parse(str: string) =
         Role.TryParse str |> Option.get
 
+    override x.ToString() =
+        match x with
+        | Actor -> "actor"
+        | Actress -> "actress"
+        | Director -> "director"
+
 type Participation = {
     staffId: int
     movieId: int
