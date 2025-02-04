@@ -1,18 +1,20 @@
 ﻿open System
+open Microsoft.Extensions.Configuration
+
 open MovieTon.CLIRunner
 open MovieTon.Core.App
 open MovieTon.Core.Movie
 open MovieTon.CLIRunner.Interpreter
 
-let private path = "/Users/chez/sources/spbu/MovieTon/ml-latest"
-
-let private mkInterpreter () =
-    let movieRepo, staffRepo, tagRepo = Repository.emptyRepositories ()
+let private mkInterpreter (config: IConfiguration) =
+    let connectionString = config.GetSection("Database")["ConnectionString"]
+    let repo = MovieTon.Database.Api.Repository.make connectionString
     let titleViewStrategy titles =
         Seq.tryFind (fun it -> it.local = Localization.Ru) titles
-        |> Option.defaultValue (Seq.head titles)
-        |> _.title
-    let app = MovieTonApp(movieRepo, staffRepo, tagRepo, titleViewStrategy)
+        |> Option.orElse (Seq.tryHead titles)
+        |> Option.map _.title
+        |> Option.defaultValue "Unknown title"
+    let app = MovieTonApp(repo, titleViewStrategy)
     Interpreter(app)
 
 let private readCmd () =
@@ -35,9 +37,7 @@ let rec private step (interpreter: Interpreter) lastCode =
 
 [<EntryPoint>]
 let main _ =
-    let config = Parser.Config.singleDirectoryDefaultConfig path
-    let interpreter = mkInterpreter ()
+    let config = ConfigurationBuilder().AddJsonFile("appsettings.json").Build()
+    let interpreter = mkInterpreter config
 
-    Parser.Command.parsingCommand config
-    |> interpreter.Interpret
-    |> step interpreter
+    step interpreter 0

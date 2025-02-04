@@ -2,39 +2,8 @@ module MovieTon.CLIRunner.Parser
 
 open MovieTon.CLIRunner.Interpreter
 open MovieTon
-open MovieTon.Parser.API
+open MovieTon.Parser.Parser
 open MovieTon.Parser.Core
-
-module Command =
-    let private mkInfoCmd cmd v =
-        v |> String.concat " " |> cmd |> Info |> Ok
-
-    let parse (str: string) =
-        match str.Split() |> List.ofArray with
-        | "info" :: "movie" :: title -> title |> mkInfoCmd MovieInfo
-        | "info" :: "staff" :: name -> name |> mkInfoCmd StaffInfo
-        | "info" :: "tag" :: name -> name |> mkInfoCmd TagInfo
-        | _ -> Error "Unknown command. Use `help` to list supported commands"
-
-    let parsingCommand config =
-        {
-            parse = fun () -> Parser.API.run config :> obj
-            doAfter = fun res ->
-                match res with
-                | :? ParsingResult<ParsedEntities> as res ->
-                    match res with
-                    | Success entities -> [
-                            entities.movies |> PutMovies |> Put
-                            entities.titles |> PutTitles |> Put
-                            entities.staffMembers |> PutStaffMembers |> Put
-                            entities.participation |> PutParticipation |> Put
-                            entities.tags |> PutTags |> Put
-                            entities.movieTags |> PutMovieTags |> Put
-                        ]
-                    | ParsingError msg -> [ Print msg; Exit 1]
-                    | UnknownError obj -> [ Print $"{obj}"; Exit 2 ]
-                | _ -> [Exit 42]
-        } |> Parse
 
 module Config =
     let singleDirectoryDefaultConfig path =
@@ -49,3 +18,43 @@ module Config =
             tagScoresPath = $"{path}{sep}TagScores_MovieLens.csv"
             relevanceLevel = 0.5
         }
+
+module Command =
+    let private mkInfoCmd cmd v =
+        v |> String.concat " " |> cmd |> Info |> Ok
+
+    let private doAfter (res: ParsingResult<ParsedEntities>) =
+        match res with
+        | Success entities ->
+            let entities = MovieTon.Parser.Integrity.integrityFilter entities
+            [
+                yield entities.movies |> PutMovies
+                yield entities.titles |> PutTitles
+                yield entities.staffMembers |> PutStaffMembers
+                yield entities.participation |> PutParticipation
+                yield entities.tags |> PutTags
+                yield entities.movieTags |> PutMovieTags
+            ] |> List.map Put
+        | ParsingError msg -> [ Print msg; Exit 1]
+        | UnknownError obj -> [ Print $"{obj}"; Exit 2 ]
+
+    let parsingCommand config =
+        {
+            parse = fun () -> Parser.API.run config :> obj
+            doAfter = fun res ->
+                match res with
+                | :? ParsingResult<ParsedEntities> as res -> doAfter res
+                | _ -> [Exit 42]
+        } |> Parse
+
+    let parse (str: string) =
+        match str.Split() |> List.ofArray with
+        | "info" :: "movie" :: title -> title |> mkInfoCmd MovieInfo
+        | "info" :: "staff" :: name -> name |> mkInfoCmd StaffInfo
+        | "info" :: "tag" :: name -> name |> mkInfoCmd TagInfo
+        | "parse" :: path ->
+            String.concat " " path
+            |> Config.singleDirectoryDefaultConfig
+            |> parsingCommand
+            |> Ok
+        | _ -> Error "Unknown command. Use `help` to list supported commands"

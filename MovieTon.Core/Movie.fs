@@ -21,6 +21,11 @@ with
             Ru
         else En
 
+    override x.ToString() =
+        match x with
+        | Ru -> "ru"
+        | En -> "en"
+
 type Title = {
     title: string
     local: Localization

@@ -4,7 +4,7 @@ open MovieTon.Core.App
 open MovieTon.Core.Movie
 open MovieTon.Core.Staff
 open MovieTon.Core.Tag
-open MovieTon.Core.View
+open MovieTon.Core.Info
 
 type InfoInst =
     | MovieInfo of string
@@ -54,10 +54,10 @@ type Interpreter(mtApp: MovieTonApp) =
         | None -> ()
         printfn ""
 
-    let ppStaffView tabSize (view: StaffView) =
+    let ppStaffView tabSize (view: StaffInfo) =
         printWithTabs tabSize view.name
 
-    let ppMovieView tabSize (view: MovieView) =
+    let ppMovieView tabSize (view: MovieInfo) =
         printWithTabs tabSize $"\"{view.title}\":"
         printWithTabs (tabSize + 1) $"Rating: {view.rating / 10}.{view.rating % 10}"
 

@@ -1,21 +1,21 @@
-module MovieTon.Core.View
+module MovieTon.Core.Info
 
-type StaffView = {
+type StaffInfo = {
     name: string
 }
 
-type MovieView = {
+type MovieInfo = {
     title: string
-    director: StaffView option
-    actors: StaffView Set
+    director: StaffInfo option
+    actors: StaffInfo Set
     tags: string Set
     rating: int
 }
 
-type MovieViewBuilder = {
+type MovieInfoBuilder = {
     mutable title: string
-    mutable director: StaffView option
-    mutable actors: StaffView seq
+    mutable director: StaffInfo option
+    mutable actors: StaffInfo seq
     mutable tags: string seq
     mutable rating: int
 }
@@ -29,7 +29,7 @@ with
     }
 
     member x.Build() = {
-        MovieView.title = x.title
+        MovieInfo.title = x.title
         director = x.director
         actors = Set.ofSeq x.actors
         tags = Set.ofSeq x.tags

@@ -1,32 +1,11 @@
 module MovieTon.Parser.API
 
+open MovieTon.Parser.Core
+open MovieTon.Parser.Parser
+
 open System.Collections.Generic
 open System.IO
 open System.Threading.Tasks
-open MovieTon.Core.Movie
-open MovieTon.Core.Staff
-open MovieTon.Core.Tag
-open MovieTon.Parser.Core
-
-type Config = {
-    movieCodesPath: string
-    actorsDirectorsNamesPath: string
-    actorsDirectorsCodesPath: string
-    ratingsPath: string
-    linksPath: string
-    tagCodesPath: string
-    tagScoresPath: string
-    relevanceLevel: float
-}
-
-type ParsedEntities = {
-    titles: Title seq
-    movies: Movie seq
-    staffMembers: StaffMember seq
-    participation: Participation seq
-    tags: Tag seq
-    movieTags: MovieTag seq
-}
 
 let private parseTitles config =
     Pipeline.runTask
