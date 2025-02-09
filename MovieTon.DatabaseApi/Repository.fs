@@ -7,6 +7,8 @@ open MovieTon.Core.Repository
 let make connectionString =
     let db = MovieDb(connectionString)
     {
+        getMovie = getMovie db
+
         getMovieByTitle = getMovieByTitle db
         putMovies = putMovies db
         putTitles = putTitles db
@@ -18,4 +20,7 @@ let make connectionString =
         getTagMovies = getTagMovies db
         putTags = putTags db
         putMovieTags = putMovieTags db
+
+        getSimilar = getSimilar db
+        putSimilarities = putSimilarities db
     }

@@ -1,6 +1,7 @@
 ﻿module internal MovieTon.Database.Api.Query
 
 open MovieTon.Core.Movie
+open MovieTon.Core.Similarity
 open MovieTon.Core.Staff
 open MovieTon.Core.Tag
 open MovieTon.Database
@@ -8,6 +9,12 @@ open MovieTon.Database
 let private toOption v =
     if obj.ReferenceEquals(v, null) then None
     else Some v
+
+let private fromDbTitle (t: DbTitle) = { title = t.Title; local = Localization.UnsafeParse(t.Local); movieId = t.MovieId }
+
+let getMovie db id titleSelector =
+    Query.GetMovieById(db, id, Seq.map fromDbTitle >> titleSelector)
+    |> toOption
 
 let getMovieByTitle db title =
     Query.GetMovieByTitle(db, title)
@@ -20,8 +27,6 @@ let putMovies db (movies: Movie seq) =
 let putTitles db (titles: Title seq) =
     let dbTitles = titles |> Seq.map (fun t -> DbTitle(t.title, t.local.ToString(), t.movieId))
     Query.AddTitles(db, dbTitles)
-
-let private fromDbTitle (t: DbTitle) = { title = t.Title; local = Localization.UnsafeParse(t.Local); movieId = t.MovieId }
 
 let getStaffMovies db name titleSelector =
     Query.GetStaffMovies(db, name, Seq.map fromDbTitle >> titleSelector)
@@ -46,3 +51,11 @@ let putTags db (tags: Tag seq) =
 let putMovieTags db (movieTags: MovieTag seq) =
     let dbMovieTags = movieTags |> Seq.map (fun mt -> DbMovieTag(mt.tagId, mt.movieId))
     Query.AddMovieTags(db, dbMovieTags)
+
+let getSimilar db cnt id chooseTitle =
+    Query.GetSimilar(db, cnt, id, Seq.map fromDbTitle >> chooseTitle)
+    |> toOption
+
+let putSimilarities db (similarities: Similarity seq) =
+    let dbSimilarities = similarities |> Seq.map (fun s -> DbSimilarity(s.movieId, s.similarId, s.confidence))
+    Query.AddSimilarities(db, dbSimilarities)

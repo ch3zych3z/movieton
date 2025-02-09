@@ -28,6 +28,14 @@ module Dictionary =
             d[key] <- defaultValue
             defaultValue
 
+    let getOrCompute<'a, 'b> (key: 'a) (computeDefault: unit -> 'b) (d: Dictionary<'a, 'b>) =
+        let contains, value = d.TryGetValue(key)
+        if contains then value
+        else
+            let defaultValue = computeDefault ()
+            d[key] <- defaultValue
+            defaultValue
+
     let get<'a, 'b> (key: 'a) (d: Dictionary<'a, 'b>) =
         let contains, value = d.TryGetValue(key)
         if contains then Some value

@@ -2,6 +2,7 @@ module MovieTon.CLIRunner.Interpreter
 
 open MovieTon.Core.App
 open MovieTon.Core.Movie
+open MovieTon.Core.Similarity
 open MovieTon.Core.Staff
 open MovieTon.Core.Tag
 open MovieTon.Core.Info
@@ -18,6 +19,7 @@ type PutAllInst =
     | PutTitles of Title seq
     | PutTags of Tag seq
     | PutMovieTags of MovieTag seq
+    | PutSimilarities of Similarity seq
 
 type ParseInst<'a> = {
     parse: unit -> 'a
@@ -73,12 +75,19 @@ type Interpreter(mtApp: MovieTonApp) =
         printWithTabs (tabSize + 1) "Tags:"
         printWithTabsSeq (tabSize + 2) view.tags
 
+    let ppSimilar tab similar =
+        printfn "Similar movies:"
+        printWithTabsSeq (tab + 1) similar
+
     let print inst =
         match inst with
         | MovieInfo title ->
             let movie = mtApp.GetMovieInfo(title)
+            let similar = movie |> Option.bind (fun m -> mtApp.GetSimilar(10, m.id))
             ppMovieView 0
             |> errorIter $"No movie found with title: \"{title}\"" movie
+            Seq.map (fun (info: MovieInfo) -> info.title) >> ppSimilar 0
+            |> errorIter $"No similar movies found for title \"{title}\"" similar
         | StaffInfo name ->
             let movies = mtApp.GetStaffInfo(name)
             errorIter $"No movie found for {name}" movies (fun movies ->
@@ -100,6 +109,7 @@ type Interpreter(mtApp: MovieTonApp) =
         | PutTitles titles -> mtApp.PutTitles titles
         | PutTags tags -> mtApp.PutTags tags
         | PutMovieTags movieTags -> mtApp.PutMovieTags movieTags
+        | PutSimilarities similarities -> mtApp.PutSimilarities similarities
 
     member private x.ParseInst inst =
         let parsed = inst.parse ()

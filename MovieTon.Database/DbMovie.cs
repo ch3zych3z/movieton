@@ -42,6 +42,20 @@ public class MovieConfiguration : IEntityTypeConfiguration<DbMovie>
                         .IsRequired();
                 }
             );
+
+        builder
+            .HasMany(m => m.SimilarFrom)
+            .WithMany(m => m.SimilarTo)
+            .UsingEntity<DbSimilarity>(
+                b => b
+                    .HasOne(s => s.SimilarFrom)
+                    .WithMany(m => m.SimilaritiesFrom)
+                    .HasForeignKey(s => s.SimilarFromId),
+                b => b
+                    .HasOne(s => s.SimilarTo)
+                    .WithMany(m => m.SimilaritiesTo)
+                    .HasForeignKey(s => s.SimilarToId)
+            );
     }
 }
 
@@ -57,4 +71,10 @@ public class DbMovie(int id, int rating)
 
     public ICollection<DbParticipation> Participation { get; set; } = null!;
     public ICollection<DbStaffMember> StaffMembers { get; set; } = null!;
+
+    public ICollection<DbSimilarity> SimilaritiesFrom { get; set; } = null!;
+    public ICollection<DbMovie> SimilarFrom { get; set; } = null!;
+
+    public ICollection<DbSimilarity> SimilaritiesTo { get; set; } = null!;
+    public ICollection<DbMovie> SimilarTo { get; set; } = null!;
 }

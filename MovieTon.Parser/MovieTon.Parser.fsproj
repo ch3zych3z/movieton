@@ -17,6 +17,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\MovieTon.Core\MovieTon.Core.fsproj" />
+      <ProjectReference Include="..\MovieTon.Logger\MovieTon.Logger.fsproj" />
       <ProjectReference Include="..\MovieTon.Utils\MovieTon.Utils.fsproj" />
     </ItemGroup>
 

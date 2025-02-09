@@ -8,6 +8,7 @@
     <ItemGroup>
         <Compile Include="Repository.fs" />
         <Compile Include="Interpreter.fs" />
+        <Compile Include="Similarity.fs" />
         <Compile Include="Parser.fs" />
         <Compile Include="Program.fs"/>
         <Content Include="appsettings.json" CopyToOutputDirectory="Always" />
@@ -16,6 +17,7 @@
     <ItemGroup>
       <ProjectReference Include="..\MovieTon.Core\MovieTon.Core.fsproj" />
       <ProjectReference Include="..\MovieTon.DatabaseApi\MovieTon.DatabaseApi.fsproj" />
+      <ProjectReference Include="..\MovieTon.Logger\MovieTon.Logger.fsproj" />
       <ProjectReference Include="..\MovieTon.Parser\MovieTon.Parser.fsproj" />
     </ItemGroup>
 

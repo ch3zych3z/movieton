@@ -22,6 +22,9 @@ type private DictRepository = {
     tags: Dictionary<int, Tag>
     tagsByMovie: Dictionary<int, List<MovieTag>>
     moviesByTag: Dictionary<int, List<MovieTag>>
+
+    tagToMoviesCache: Dictionary<string, MovieInfo seq>
+    staffToMoviesCache: Dictionary<string, MovieInfo seq>
 }
 with
     static member Empty() = {
@@ -35,6 +38,8 @@ with
         tags = Dictionary()
         tagsByMovie = Dictionary()
         moviesByTag = Dictionary()
+        tagToMoviesCache = Dictionary()
+        staffToMoviesCache = Dictionary()
     }
 
 let private getMovie repo id =
@@ -78,7 +83,7 @@ let private getDirectorActors repo movieId =
         director, Some actors
     | None -> None, None
 
-let private putStaffMembers repo members =
+let private putStaffMembers repo (members: StaffMember seq) =
     for mem in members do
         repo.staffMembers[mem.id] <- mem
 
@@ -104,6 +109,9 @@ let private getTagsByMovie repo movieId =
     Dictionary.get movieId repo.tagsByMovie
     |> Option.map (Seq.choose (fun mt -> Dictionary.get mt.tagId repo.tags))
 
+let private getSimilar _ _ _ _ = None
+let private putSimilarities _ _ = ()
+
 let private putTags repo (tags: Tag seq) =
     for tag in tags do
         repo.tags[tag.id] <- tag
@@ -124,6 +132,7 @@ let private movieView repo (title: string) (movie: Movie) =
 
     movieBuilder.title <- title
     movieBuilder.rating <- movie.rating
+    movieBuilder.id <- movie.id
 
     let director, actors = getDirectorActors repo movie.id
     match director with
@@ -145,7 +154,7 @@ let private getMovieViewByTitle repo title =
     getMovieByTitle repo title
     |> Option.bind (movieView repo title)
 
-let private movieViewById repo chooseTitle id =
+let private movieViewById repo id chooseTitle =
     let movie = getMovie repo id
     match movie with
     | Some movie ->
@@ -157,26 +166,38 @@ let private movieViewById repo chooseTitle id =
     | None -> None
 
 let private getStaffMovies repo name chooseTitle =
-    let participation = getParticipationByName repo name
-    match participation with
-    | Some participation ->
-        participation
-        |> Seq.choose (fun p -> movieViewById repo chooseTitle p.movieId)
-        |> Some
-    | None -> None
+    let found, movies = repo.staffToMoviesCache.TryGetValue(name)
+    if found then Some movies
+    else
+        let participation = getParticipationByName repo name
+        match participation with
+        | Some participation ->
+            let movies =
+                participation
+                |> Seq.choose (fun p -> movieViewById repo p.movieId chooseTitle)
+            repo.staffToMoviesCache.Add(name, movies)
+            Some movies
+        | None -> None
 
 let private getTagMovies repo tag chooseTitle =
-    let movies = getMoviesWithTagName repo tag
-    match movies with
-    | Some movies ->
-        movies
-        |> Seq.choose (fun t -> movieViewById repo chooseTitle t.movieId)
-        |> Some
-    | None -> None
+    let found, movies = repo.tagToMoviesCache.TryGetValue(tag)
+    if found then Some movies
+    else
+        let movies = getMoviesWithTagName repo tag
+        match movies with
+        | Some movies ->
+            let movies =
+                movies
+                |> Seq.choose (fun t -> movieViewById repo t.movieId chooseTitle)
+            repo.tagToMoviesCache.Add(tag, movies)
+            Some movies
+        | None -> None
 
 let empty () =
     let repo = DictRepository.Empty()
     {
+        getMovie = movieViewById repo
+
         getMovieByTitle = getMovieViewByTitle repo
         putMovies = putMovies repo
         putTitles = putTitles repo
@@ -188,4 +209,7 @@ let empty () =
         getTagMovies = getTagMovies repo
         putTags = putTags repo
         putMovieTags = putMovieTags repo
+
+        getSimilar = getSimilar repo
+        putSimilarities = putSimilarities repo
     }

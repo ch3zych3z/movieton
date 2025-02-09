@@ -12,6 +12,8 @@ public sealed class MovieDbContext(string connectionString) : DbContext
     public DbSet<DbTag> Tags { get; set; }
     public DbSet<DbMovieTag> MovieTags { get; set; }
 
+    public DbSet<DbSimilarity> Similarities { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseMySql(connectionString,

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MovieTon.Database;
 
@@ -10,9 +11,11 @@ using MovieTon.Database;
 namespace MovieTon.Database.Migrations
 {
     [DbContext(typeof(MovieDbContext))]
-    partial class MovieDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250205155254_AddSimilarity")]
+    partial class AddSimilarity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -95,7 +98,7 @@ namespace MovieTon.Database.Migrations
 
                     b.HasIndex("SimilarToId");
 
-                    b.ToTable("Similarities");
+                    b.ToTable("DbSimilarity");
                 });
 
             modelBuilder.Entity("MovieTon.Database.DbStaffMember", b =>

@@ -1,29 +1,33 @@
 module MovieTon.Parser.Integrity
 
 open System.Collections.Generic
+open MovieTon
 open MovieTon.Core.Movie
 open MovieTon.Parser.Parser
 
 let private uniqueCheck (entities: ParsedEntities) =
-    let unique x = Set.ofSeq x |> List.ofSeq |> Seq.cast
+    let unique (x: _ seq) = HashSet(x)
+
     {
         titles = unique entities.titles
-        movies = unique entities.movies
-        staffMembers = unique entities.staffMembers
+        movies = entities.movies
+        staffMembers = entities.staffMembers
         participation = unique entities.participation
-        tags = unique entities.tags
-        movieTags = unique entities.movieTags
+        tags = entities.tags
+        movieTags = entities.movieTags
     }
 
 let private idCheck (entities: ParsedEntities) =
-    let movieIds = entities.movies |> Seq.map _.id |> Set.ofSeq
-    let staffIds = entities.staffMembers |> Seq.map _.id |> Set.ofSeq
-    let tagIds = entities.tags |> Seq.map _.id |> Set.ofSeq
+    let movieIds = entities.movies |> Seq.map _.id |> HashSet
+    movieIds.IntersectWith(entities.titles |> Seq.map _.movieId)
+    let staffIds = entities.staffMembers |> Seq.map _.id |> HashSet
+    let tagIds = entities.tags |> Seq.map _.id |> HashSet
 
     { entities with
-        titles = entities.titles |> Seq.filter (fun t -> Set.contains t.movieId movieIds)
-        participation = entities.participation |> Seq.filter (fun p -> Set.contains p.movieId movieIds && Set.contains p.staffId staffIds)
-        movieTags = entities.movieTags |> Seq.filter (fun t -> Set.contains t.movieId movieIds && Set.contains t.tagId tagIds)
+        movies = entities.movies |> Seq.filter (fun m -> movieIds.Contains(m.id))
+        titles = entities.titles |> Seq.filter (fun t -> movieIds.Contains(t.movieId))
+        participation = entities.participation |> Seq.filter (fun p -> movieIds.Contains(p.movieId) && staffIds.Contains(p.staffId))
+        movieTags = entities.movieTags |> Seq.filter (fun t -> movieIds.Contains(t.movieId) && tagIds.Contains(t.tagId))
     }
 
 let private titleCheck (entities: ParsedEntities) =

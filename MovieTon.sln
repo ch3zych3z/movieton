@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieTon.Database", "MovieT
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MovieTon.DatabaseApi", "MovieTon.DatabaseApi\MovieTon.DatabaseApi.fsproj", "{3ED3DC00-096F-4F58-A562-C712C1DA58F1}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MovieTon.Logger", "MovieTon.Logger\MovieTon.Logger.fsproj", "{542011B7-B699-4666-95F2-472964C34454}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{3ED3DC00-096F-4F58-A562-C712C1DA58F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3ED3DC00-096F-4F58-A562-C712C1DA58F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3ED3DC00-096F-4F58-A562-C712C1DA58F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{542011B7-B699-4666-95F2-472964C34454}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{542011B7-B699-4666-95F2-472964C34454}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{542011B7-B699-4666-95F2-472964C34454}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{542011B7-B699-4666-95F2-472964C34454}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

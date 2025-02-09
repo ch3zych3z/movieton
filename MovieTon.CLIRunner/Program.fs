@@ -1,6 +1,7 @@
 ﻿open System
 open Microsoft.Extensions.Configuration
 
+open MovieTon
 open MovieTon.CLIRunner
 open MovieTon.Core.App
 open MovieTon.Core.Movie
@@ -40,4 +41,5 @@ let main _ =
     let config = ConfigurationBuilder().AddJsonFile("appsettings.json").Build()
     let interpreter = mkInterpreter config
 
+    Logger.debug "Started!"
     step interpreter 0
