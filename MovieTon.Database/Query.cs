@@ -12,6 +12,7 @@ public static class Query
         builder.title = title;
         builder.rating = movie.Rating;
         builder.tags = movie.Tags.Select(t => t.Name);
+        builder.id = movie.Id;
 
         var directorIds = movie.Participation
             .Where(p => p.Role == "director")
@@ -47,7 +48,38 @@ public static class Query
             .Include(m => m.Tags)
             .Include(m => m.Participation)
             .Include(m => m.StaffMembers)
+            .Include(m => m.Titles)
             .FirstOrDefault();
+    }
+
+    public static Info.MovieInfo? GetMovieById(MovieDb db, int id, Func<IEnumerable<DbTitle>, string> titleSelector)
+    {
+        using var ctx = db.NewContext();
+        var movie = GetMovieById(ctx, id);
+        return movie == null ? null : BuildInfo(movie, titleSelector);
+    }
+
+    public static IEnumerable<Info.MovieInfo>? GetSimilar(MovieDb db, int size, int id, Func<IEnumerable<DbTitle>, string> titleSelector)
+    {
+        using var ctx = db.NewContext();
+        var movie = ctx.Movies
+            .Where(m => m.Id == id)
+            .Include(m => m.SimilaritiesFrom)
+            .Include(m => m.SimilarFrom)
+            .FirstOrDefault();
+
+        if (movie == null) return null;
+
+        var similarities = movie.SimilaritiesFrom.ToArray();
+        Array.Sort(similarities, (a, b) => (int)Math.Ceiling(10 * (b.Confidence - a.Confidence)));
+        var similarMovies =
+            similarities
+                .Take(size)
+                .Select(s => GetMovieById(ctx, s.SimilarToId))
+                .OfType<DbMovie>()
+                .Select(m => BuildInfo(m, titleSelector))
+                .ToList();
+        return similarMovies;
     }
 
     public static Info.MovieInfo? GetMovieByTitle(MovieDb db, string title)
@@ -85,48 +117,55 @@ public static class Query
             .Include(t => t.Movies).ThenInclude(m => m.StaffMembers)
             .Include(t => t.Movies).ThenInclude(m => m.Titles)
             .FirstOrDefault();
-        return tag?.Movies.Select(m => BuildInfo(m, titleSelector));
+        return tag?.Movies.Where(m => m.Titles.Count != 0).Select(m => BuildInfo(m, titleSelector));
     }
 
     public static void AddMovies(MovieDb db, IEnumerable<DbMovie> movies)
     {
         using var ctx = db.NewContext();
-        ctx.Movies.AddRange(movies);
+        ctx.Movies.UpdateRange(movies);
         ctx.SaveChanges();
     }
 
     public static void AddTitles(MovieDb db, IEnumerable<DbTitle> titles)
     {
         using var ctx = db.NewContext();
-        ctx.Titles.AddRange(titles);
+        ctx.Titles.UpdateRange(titles);
         ctx.SaveChanges();
     }
 
     public static void AddStaffMembers(MovieDb db, IEnumerable<DbStaffMember> staffMembers)
     {
         using var ctx = db.NewContext();
-        ctx.StaffMembers.AddRange(staffMembers);
+        ctx.StaffMembers.UpdateRange(staffMembers);
         ctx.SaveChanges();
     }
 
     public static void AddParticipation(MovieDb db, IEnumerable<DbParticipation> participation)
     {
         using var ctx = db.NewContext();
-        ctx.Participation.AddRange(participation);
+        ctx.Participation.UpdateRange(participation);
         ctx.SaveChanges();
     }
 
     public static void AddTags(MovieDb db, IEnumerable<DbTag> tags)
     {
         using var ctx = db.NewContext();
-        ctx.Tags.AddRange(tags);
+        ctx.Tags.UpdateRange(tags);
         ctx.SaveChanges();
     }
 
     public static void AddMovieTags(MovieDb db, IEnumerable<DbMovieTag> movieTags)
     {
         using var ctx = db.NewContext();
-        ctx.MovieTags.AddRange(movieTags);
+        ctx.MovieTags.UpdateRange(movieTags);
+        ctx.SaveChanges();
+    }
+
+    public static void AddSimilarities(MovieDb db, IEnumerable<DbSimilarity> similarities)
+    {
+        using var ctx = db.NewContext();
+        ctx.Similarities.UpdateRange(similarities);
         ctx.SaveChanges();
     }
 }

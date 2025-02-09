@@ -26,7 +26,12 @@ module Command =
     let private doAfter (res: ParsingResult<ParsedEntities>) =
         match res with
         | Success entities ->
+            Logger.debug "Parsed..."
             let entities = MovieTon.Parser.Integrity.integrityFilter entities
+            Logger.debug "Filtered..."
+            Logger.debug $"Total movies: {entities.movies |> Seq.length}"
+            let similarities = Similarity.getSimilarities entities
+            Logger.debug $"similarities found: {List.length similarities}"
             [
                 yield entities.movies |> PutMovies
                 yield entities.titles |> PutTitles
@@ -34,6 +39,7 @@ module Command =
                 yield entities.participation |> PutParticipation
                 yield entities.tags |> PutTags
                 yield entities.movieTags |> PutMovieTags
+                yield similarities |> Seq.cast |> PutSimilarities
             ] |> List.map Put
         | ParsingError msg -> [ Print msg; Exit 1]
         | UnknownError obj -> [ Print $"{obj}"; Exit 2 ]

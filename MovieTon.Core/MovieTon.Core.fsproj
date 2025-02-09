@@ -10,6 +10,7 @@
         <Compile Include="Staff.fs" />
         <Compile Include="Movie.fs" />
         <Compile Include="Tag.fs" />
+        <Compile Include="Similarity.fs" />
         <Compile Include="Repository.fs" />
         <Compile Include="App.fs" />
     </ItemGroup>
